@@ -1,0 +1,77 @@
+# Step 1 - Import Libraries
+import pandas as pd
+import numpy as np
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import Lasso
+from sklearn.model_selection import train_test_split
+
+
+# Step 2 - Load Dataset
+path = r"C:\Users\Admin\Downloads\sms+spam+collection\SMSSpamCollection"
+
+df = pd.read_csv(path, sep='\t', names=['label','message'])
+
+
+# Step 3 - Convert Label to Numeric
+df['label'] = df['label'].map({'ham':0, 'spam':1})
+
+
+# Step 4 - Convert Text to TF-IDF
+vectorizer = TfidfVectorizer()
+
+X = vectorizer.fit_transform(df['message'])
+
+y = df['label']
+
+
+# Step 5 - Total Features
+total_features = X.shape[1]
+
+print("Total Features Created:", total_features)
+
+
+# Step 6 - Train Lasso Model (alpha = 0.1)
+lasso = Lasso(alpha=0.1)
+
+lasso.fit(X, y)
+
+coefficients = lasso.coef_
+
+
+# Step 7 - Count Non-zero Features
+non_zero = np.sum(coefficients != 0)
+
+zero = np.sum(coefficients == 0)
+
+print("\nAlpha = 0.1")
+print("Non-zero features:", non_zero)
+print("Eliminated features:", zero)
+
+
+# Step 8 - Train with alpha = 0.01
+lasso1 = Lasso(alpha=0.01)
+
+lasso1.fit(X, y)
+
+non_zero_01 = np.sum(lasso1.coef_ != 0)
+
+print("\nAlpha = 0.01")
+print("Selected features:", non_zero_01)
+
+
+# Step 9 - Train with alpha = 1
+lasso2 = Lasso(alpha=1)
+
+lasso2.fit(X, y)
+
+non_zero_1 = np.sum(lasso2.coef_ != 0)
+
+print("\nAlpha = 1")
+print("Selected features:", non_zero_1)
+
+
+# Step 10 - Percentage Reduction
+reduction = ((total_features - non_zero) / total_features) * 100
+
+print("\nPercentage reduction:", reduction)
